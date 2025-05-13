@@ -12,6 +12,7 @@ class Forwarder:
 
     def forward(self):
         while not self.exit_event.is_set():
+            _from_conn = None
             try:
                 _from_conn, _from_addr = self._from()
                 if _from_conn is None: continue
@@ -20,13 +21,18 @@ class Forwarder:
             except TimeoutError as e:
                 pass
             except Exception as e:
+                if _from_conn: _from_conn.close()
                 self.logger.error(f'{e.__class__.__name__}: {e}')
+                self._forward_failed()
 
     def _from(self) -> tuple[any, str]:
         raise NotImplementedError()
 
     def _to(self, _from) -> tuple[any, str]:
         raise NotImplementedError()
+
+    def _forward_failed(self):
+        pass
 
     def _connection_handler(self, f, f_a, t, t_a):
         while not self.exit_event.is_set():

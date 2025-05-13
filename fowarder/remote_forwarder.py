@@ -17,13 +17,20 @@ class RemoteForwarder(Forwarder):
 
         self.transport = self.transport_manager.get(self.config.ssh_config)
 
-        self.logger = logging.getLogger(f"RemoteForwarder[{self.config.local_host}:{self.config.local_port} <--> {self.config.ssh_config} <--> {self.config.remote_host}:{self.config.remote_port}]")
+        self.logger = logging.getLogger(
+            f"RemoteForwarder[{self.config.local_host}:{self.config.local_port} <--> {self.config.ssh_config} <--> {self.config.remote_host}:{self.config.remote_port}]")
 
         try:
-            self.transport.request_port_forward(self.config.remote_host, self.config.remote_port)
-            self.logger.info("Successfully initialized remote forwarder")
+            new_port = self.transport.request_port_forward(self.config.remote_host, self.config.remote_port)
         except Exception as e:
-            self.logger.error(f'绑定远程端口失败 {e.__class__.__name__}: {e}')
+            self.logger.error(f'绑定指定的远程端口失败 {e.__class__.__name__}: {e}')
+            new_port = self.transport.request_port_forward(self.config.remote_host, 0)
+            self.logger.error(f'随机绑定远程端口: {new_port}')
+
+        self.logger = logging.getLogger(
+            f"RemoteForwarder[{self.config.local_host}:{self.config.local_port} <--> {self.config.ssh_config} <--> {self.config.remote_host}:{new_port}]")
+
+        self.logger.info("Successfully initialized remote forwarder")
 
     def _from(self):
         connection, address = self.transport.accept(timeout=1), None
@@ -35,6 +42,10 @@ class RemoteForwarder(Forwarder):
         to_addr = (self.config.local_host, self.config.local_port)
         local_sock.connect(to_addr)
         return local_sock, to_addr
+
+    def _forward_failed(self):
+        self.transport = self.transport_manager.get(self.config.ssh_config)
+
 
     def close(self):
         super().close()

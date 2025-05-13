@@ -36,6 +36,9 @@ class DynamicForwarder(Forwarder):
         )
         return channel, to_addr
 
+    def _forward_failed(self):
+        self.transport = self.transport_manager.get(self.config.ssh_config)
+
     def close(self):
         super().close()
         self.local_socket.close()
