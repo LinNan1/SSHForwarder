@@ -1,3 +1,4 @@
+from os import close
 from typing import TypeVar
 
 ResourceType = TypeVar('ResourceType')
@@ -7,14 +8,11 @@ class ResourceAgent:
         if self.internal:
             self.resource = resource_class(*args, **kwargs)
         else:
-            self.resource = resource
-
+            external_resource = type('ExternalResource', (resource_class, ),{
+                "close": lambda _self: None,
+                "shutdown": lambda _self: None,
+            })
+            self.resource = external_resource.__new__(external_resource)
+            self.resource.__dict__ = resource.__dict__
     def init(self) -> ResourceType:
         return self.resource
-
-    def close(self):
-        if self.internal:
-            if self.resource.close:
-                self.resource.close()
-            if self.resource.shutdown:
-                self.resource.shutdown()
