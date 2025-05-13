@@ -3,10 +3,14 @@ import select
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+from utils import ResourceAgent
+
 
 class Forwarder:
-    def __init__(self):
-        self.thread_pool_executor = ThreadPoolExecutor()
+    def __init__(self,thread_pool_executor :ThreadPoolExecutor = None):
+        self.thread_pool_executor = ResourceAgent(ThreadPoolExecutor, thread_pool_executor,
+                                                  thread_name_prefix=f"{self.__class__.__name__}.connection",
+                                                  max_workers=4096).init()
         self.exit_event = threading.Event()
         self.logger = logging.getLogger("Forwarder")
 
