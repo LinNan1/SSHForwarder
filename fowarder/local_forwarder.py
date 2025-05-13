@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from config import ForwardConfig
 from manager import SocketManager, TransportManager
@@ -7,8 +8,11 @@ from .base import Forwarder
 
 
 class LocalForwarder(Forwarder):
-    def __init__(self, config: ForwardConfig | tuple, socket_manager: SocketManager = None, transport_manager: TransportManager = None):
-        super().__init__()
+    def __init__(self, config: ForwardConfig | tuple,
+                 socket_manager: SocketManager = None,
+                 transport_manager: TransportManager = None,
+                 thread_pool_executor: ThreadPoolExecutor = None):
+        super().__init__(thread_pool_executor)
         if not isinstance(config, ForwardConfig):
             self.config = ForwardConfig(*config)
         self.socket_manager = ResourceAgent(SocketManager, socket_manager).init()
@@ -41,4 +45,5 @@ class LocalForwarder(Forwarder):
     def close(self):
         super().close()
         self.local_socket.close()
+        self.socket_manager.close()
         self.transport_manager.close()

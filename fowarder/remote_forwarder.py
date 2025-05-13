@@ -1,4 +1,5 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from config import ForwardConfig
 from manager import SocketManager, TransportManager
@@ -7,8 +8,11 @@ from .base import Forwarder
 
 
 class RemoteForwarder(Forwarder):
-    def __init__(self, config: ForwardConfig | tuple, socket_manager: SocketManager = None, transport_manager: TransportManager = None):
-        super().__init__()
+    def __init__(self, config: ForwardConfig | tuple,
+                 socket_manager: SocketManager = None,
+                 transport_manager: TransportManager = None,
+                 thread_pool_executor: ThreadPoolExecutor = None):
+        super().__init__(thread_pool_executor)
 
         if not isinstance(config, ForwardConfig):
             self.config = ForwardConfig(*config)

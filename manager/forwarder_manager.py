@@ -20,6 +20,9 @@ class ForwarderManager(Manager):
         self._futures.append(future)
         return forwarder
 
+    def _before_close(self):
+        self.thread_pool_executor.shutdown()
+
     def _close(self, forwarder: Forwarder):
         forwarder.close()
 

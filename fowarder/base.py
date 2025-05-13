@@ -65,4 +65,5 @@ class Forwarder:
 
     def close(self):
         self.exit_event.set()
+        self.thread_pool_executor.shutdown()
 
