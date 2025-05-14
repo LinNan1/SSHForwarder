@@ -8,7 +8,7 @@ import select
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from utils import ResourceAgent
+from utils import ResourceAgent, parse_cleartext_payload
 
 
 class Forwarder:
@@ -122,6 +122,7 @@ class Forwarder:
             data = f.recv(4096)
             if data == b'':
                 return False
+            logger.debug(parse_cleartext_payload(data))
         except Exception as e:
             logger.debug(f'{e.__class__.__name__}: {e}')
             return False

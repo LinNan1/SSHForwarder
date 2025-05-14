@@ -60,3 +60,67 @@ class ResourceAgent:
             返回的都是统一接口的资源实例
         """
         return self.resource
+
+def parse_cleartext_payload(data, print_len: int = 16) -> str:
+    """
+    解析明文或常见协议数据，返回可读的字符串表示
+    
+    支持解析TLS、HTTP、SSH等常见协议，以及普通文本和二进制数据。
+    
+    Args:
+        data: 原始字节数据
+        print_len: 返回字符串中显示的数据长度，默认为16字节
+        
+    Returns:
+        str: 格式化后的协议信息或数据片段
+        
+    Examples:
+        >>> parse_cleartext_payload(b'GET / HTTP/1.1\\r\\nHost: example.com')
+        'HTTP数据: GET / HTTP/1.1 ... (共2行)'
+    """
+    # 协议识别和数据解析
+    if len(data) >= 3 and (data[0] == 0x16 or data[0] == 0x14 or data[0] == 0x17):  # TLS记录层
+        # TLS记录层协议解析
+        # 字节0: 内容类型(0x16=握手协议, 0x14=应用数据, 0x17=应用数据协议)
+        content_type = "握手协议" if data[0] == 0x16 else "应用数据" if data[0] == 0x14 else "应用数据协议"
+        # 字节1-2: 协议版本
+        version = data[1:3]
+        version_str = "未知版本"
+        if version == b'\x03\x01':
+            version_str = "TLS 1.0"
+        elif version == b'\x03\x02':
+            version_str = "TLS 1.1"
+        elif version == b'\x03\x03':
+            version_str = "TLS 1.2"
+        elif version == b'\x03\x04':
+            version_str = "TLS 1.3"
+        # 字节3-4: 记录长度
+        record_length = int.from_bytes(data[3:5], 'big')
+        return f"TLS数据: 类型={content_type} 版本={version_str} 长度={record_length} 数据: {data[:print_len]}..."
+    elif b'HTTP/' in data or b'GET ' in data or b'POST ' in data:  # HTTP
+        try:
+            text = data.decode('utf-8')
+            lines = text.split('\r\n')
+            return f"HTTP数据: {lines[0]} ... (共{len(lines)}行)"
+        except UnicodeDecodeError:
+            return f"HTTP数据(无法解码): {data[:print_len]}..."
+    elif b'SSH-' in data:  # SSH
+        # SSH协议解析
+        # 前 4 字节: 协议标识长度
+        # 后续字节: 协议标识(SSH-2.0-...)
+        proto_length = int.from_bytes(data[:4], 'big')
+        proto_id = data[4:4 + proto_length].decode('ascii')
+        return f"SSH协议数据: 标识长度={proto_length} 协议标识={proto_id} 数据: {data[:print_len]}..."
+    else:
+        try:
+            text = data.decode('utf-8')
+            if len(text) > 50:
+                text = text[:print_len] + '...'
+            return f"明文数据: {text}"
+        except UnicodeDecodeError:
+            # 尝试解析常见二进制协议
+            if len(data) >= 4 and data[0] == 0x00:  # 可能为长度前缀协议
+                length = int.from_bytes(data[:4], 'big')
+                return f"二进制协议数据: 长度前缀={length} 数据: {data[:print_len]}..."
+            else:
+                return f"二进制数据: {data[:print_len]}..."
