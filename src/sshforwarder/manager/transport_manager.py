@@ -8,8 +8,8 @@ import logging
 import threading
 from time import sleep
 
-from config import SSHConfig
-from utils import ResourceAgent
+from sshforwarder.config import SSHConfig
+from sshforwarder.utils import ResourceAgent
 from .base import Manager
 from paramiko import Transport
 from .socket_manager import SocketManager

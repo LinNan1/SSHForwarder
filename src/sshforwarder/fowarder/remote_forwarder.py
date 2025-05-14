@@ -6,9 +6,9 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
-from config import ForwardConfig
-from manager import SocketManager, TransportManager
-from utils import ResourceAgent
+from sshforwarder.config import ForwardConfig
+from sshforwarder.manager import SocketManager, TransportManager
+from sshforwarder.utils import ResourceAgent
 from .base import Forwarder
 
 

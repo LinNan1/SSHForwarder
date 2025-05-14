@@ -1,23 +1,22 @@
 """
-动态端口转发器实现模块
+本地端口转发器实现模块
 
-该模块提供了DynamicForwarder类，用于实现基于SOCKS5协议的动态端口转发功能。
+该模块提供了LocalForwarder类，用于实现本地到远程的SSH端口转发功能。
 """
 import logging
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures.thread import ThreadPoolExecutor
 
-from config import ForwardConfig
-from manager import SocketManager, TransportManager
-from utils import ResourceAgent
-from protocols import Socks5
+from sshforwarder.config import ForwardConfig
+from sshforwarder.manager import SocketManager, TransportManager
+from sshforwarder.utils import ResourceAgent
 from .base import Forwarder
 
 
-class DynamicForwarder(Forwarder):
+class LocalForwarder(Forwarder):
     """
-    动态端口转发器类
+    本地端口转发器类
     
-    继承自Forwarder基类，实现基于SOCKS5协议的动态端口转发功能。
+    继承自Forwarder基类，实现本地端口到远程主机的SSH隧道转发功能。
     
     Attributes:
         config: 转发配置对象
@@ -32,7 +31,7 @@ class DynamicForwarder(Forwarder):
                  transport_manager: TransportManager = None,
                  thread_pool_executor: ThreadPoolExecutor = None):
         """
-        初始化动态端口转发器
+        初始化本地端口转发器
         
         Args:
             config: 转发配置对象或配置元组
@@ -49,9 +48,9 @@ class DynamicForwarder(Forwarder):
         self.transport = self.transport_manager.get(self.config.ssh_config)
         self.local_socket = self.socket_manager.get((self.config.local_port, self.config.local_host))
 
-        self.logger = logging.getLogger(f"DynamicForwarder[{'%s:%s'%self.local_socket.getsockname()} <--> {self.config.ssh_config} <--> *]")
+        self.logger = logging.getLogger(f"LocalForwarder[{'%s:%s'%self.local_socket.getsockname()} <--> {self.config.ssh_config} <--> {self.config.remote_host}:{self.config.remote_port}]")
 
-        self.logger.info("Successfully initialized dynamic forwarder")
+        self.logger.info("Successfully initialized local forwarder")
 
     def _from(self):
         """
@@ -65,17 +64,15 @@ class DynamicForwarder(Forwarder):
 
     def _to(self, _from):
         """
-        建立到动态目标的连接
-        
-        通过SOCKS5协议解析目标地址并建立SSH通道连接。
+        建立到远程目标的连接
         
         Args:
             _from: 本地连接对象
             
         Returns:
-            tuple: (SSH通道对象, 目标地址)
+            tuple: (SSH通道对象, 远程目标地址)
         """
-        to_addr = Socks5(_from).destination()
+        to_addr = (self.config.remote_host, self.config.remote_port)
         channel = self.transport.open_channel(
             kind='direct-tcpip',
             src_addr=_from.getpeername(),

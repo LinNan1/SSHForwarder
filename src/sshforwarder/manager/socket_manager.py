@@ -7,7 +7,7 @@ import logging
 import socket
 import threading
 
-from config import SocketConfig
+from sshforwarder.config import SocketConfig
 from .base import Manager
 
 

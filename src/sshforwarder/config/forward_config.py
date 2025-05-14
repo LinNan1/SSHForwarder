@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from config import SSHConfig
+from .ssh_config import SSHConfig
 
 
 @dataclass

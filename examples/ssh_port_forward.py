@@ -1,5 +1,5 @@
-from fowarder import LocalForwarder, DynamicForwarder, RemoteForwarder
-from manager import ForwarderManager
+from sshforwarder import LocalForwarder, DynamicForwarder, RemoteForwarder
+from sshforwarder import ForwarderManager
 from paramiko import Ed25519Key
 import logging
 

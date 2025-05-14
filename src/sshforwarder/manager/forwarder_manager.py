@@ -5,8 +5,8 @@ SSH端口转发管理器模块
 """
 from concurrent.futures import ThreadPoolExecutor, wait
 
-from fowarder.base import Forwarder
-from utils import ResourceAgent
+from sshforwarder.fowarder.base import Forwarder
+from sshforwarder.utils import ResourceAgent
 from .base import Manager
 
 

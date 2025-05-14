@@ -8,7 +8,7 @@ import select
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
-from utils import ResourceAgent, parse_cleartext_payload
+from sshforwarder.utils import ResourceAgent, parse_cleartext_payload
 
 
 class Forwarder:
