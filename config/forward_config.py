@@ -1,16 +1,25 @@
-from collections import namedtuple
-
+from dataclasses import dataclass
 from config import SSHConfig
 
 
-class ForwardConfig(namedtuple("_ForwardConfig","local_port remote_port ssh_config local_host remote_host", defaults=['localhost','localhost'])):
+@dataclass
+class ForwardConfig:
+    """
+    SSH端口转发配置类
+    
+    Attributes:
+        local_port (int): 本地端口号
+        remote_port (int | None): 远程端口号
+        ssh_config (SSHConfig | tuple): SSH连接配置
+        local_host (str): 本地主机地址，默认为'localhost'
+        remote_host (str): 远程主机地址，默认为'localhost'
+    """
     local_port: int
     remote_port: int | None
-    ssh_config: SSHConfig
-    local_host: str
-    remote_host: str
+    ssh_config: SSHConfig | tuple
+    local_host: str = 'localhost'
+    remote_host: str = 'localhost'
 
-    def __new__(cls, *args, **kwargs):
-        args = (*args[:2], SSHConfig(*args[2]), *args[3:])
-        c = super().__new__(cls, *args, **kwargs)
-        return c
+    def __post_init__(self):
+        if not isinstance(self.ssh_config, SSHConfig):
+            self.ssh_config = SSHConfig(*self.ssh_config)
